@@ -22,7 +22,7 @@ References:
 */
 
 var fs = require('fs');
-var rest = require('./restler');
+var rest = require('restler');
 var program = require('commander');
 var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
@@ -60,13 +60,14 @@ var checkHtml = function(html, checksfile) {
 var pipeHtml = function(htmlfile, url, checksfile){
     if(!htmlfile){
 	rest.get(url).on('complete', function(result){
-	var output = checkHtml(cheerioHtmlFile(result), checksfile);
+	var output = checkHtml(cheerio.load(result, checksfile));
 	return output;    
-        }	
+        }
+        );			 
     } else {
 	return checkHtml(cheerioHtmlFile(htmlfile), checksfile);
     }
-}	
+};	
 
 var clone = function(fn) {
     // Workaround for commander.js issue.
@@ -80,9 +81,10 @@ if(require.main == module) {
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
         .option('-u, --url <webadress>', 'Path to website')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+   // var checkJson = checkHtml(program.file, program.checks);
+    var checkJson = pipeHtml(program.file, program.url, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
-    exports.checkHtmlFile = checkHtmlFile;
+    exports.checkHtml = checkHtml;
 }
